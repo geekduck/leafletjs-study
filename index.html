@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<title>Leaflet Quick Start Guide Example</title>
 	<meta charset="utf-8" />
@@ -8,50 +9,96 @@
 
 	<link rel="stylesheet" href="./css/leaflet.css" />
 </head>
+
 <body>
-	<div id="mapid" style="width: 600px; height: 400px"></div>
+	<div id="mapid" style="width: 1000px; height: 700px"></div>
 
+	<script src='//code.jquery.com/jquery-3.1.0.min.js'></script>
 	<script src="./js/vendor/leaflet-0.7.7.js"></script>
+	<script src="./js/mesh.js"></script>
 	<script>
+		$(function() {
 
-		var mapUrl1 = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'; // Color
-		var mapUrl2 = 'http://{s}.www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png'; // Mono
-		var mymap = L.map('mapid').setView([35.533, 139.695], 16);
-		var mapCopyright = '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors';
+			var mapUrl1 = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'; // Color
+			var mapUrl2 = 'http://{s}.www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png'; // Mono
+			var mymap = L.map('mapid').setView([35.533, 139.695], 16);
+			var mapCopyright = '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors';
 
-		L.tileLayer(mapUrl1, {
-			maxZoom: 18,
-			attribution: mapCopyright
-		}).addTo(mymap);
-
-
-		L.marker([35.533, 139.695]).addTo(mymap)
-			.bindPopup("<b>Hello world!</b><br />I am a popup.").openPopup();
-
-		L.circle([35.530, 139.693], 100, {
-			color: 'red',
-			fillColor: '#f03',
-			fillOpacity: 0.5
-		}).addTo(mymap).bindPopup("I am a circle.");
-
-		L.polygon([
-			[35.513, 139.685],
-			[35.523, 139.685],
-			[35.533, 139.695]
-		]).addTo(mymap).bindPopup("I am a polygon.");
+			L.tileLayer(mapUrl1, {
+				maxZoom: 18,
+				attribution: mapCopyright
+			}).addTo(mymap);
 
 
-		var popup = L.popup();
+			L.marker([35.533, 139.695]).addTo(mymap)
+				.bindPopup("<b>Hello world!</b><br />I am a popup.").openPopup();
 
-		function onMapClick(e) {
-			popup
-				.setLatLng(e.latlng)
-				.setContent("You clicked the map at " + e.latlng.toString())
-				.openOn(mymap);
-		}
+			var circle = L.circle([35.530, 139.693], 100, {
+				color: 'red',
+				fillColor: '#f03',
+				fillOpacity: 0.5
+			})
+			circle.addTo(mymap).bindPopup("I am a circle.");
+			circle.on('click', function(e) {
+				console.dir(e); // e is an event object (MouseEvent in this case)
+				console.dir(this);
+				console.dir(this.getBounds());
+				console.dir(this.getLatLng());
+				console.dir(this.toGeoJSON());
+				console.dir(mymap);
+			});
 
-		mymap.on('click', onMapClick);
+			L.polygon([
+				[35.513, 139.685],
+				[35.523, 139.685],
+				[35.533, 139.695]
+			]).addTo(mymap).bindPopup("I am a polygon.");
 
+			L.rectangle([
+				[35.675, 139.7625],
+				[35.68333333333333, 139.775]
+			]).addTo(mymap).bindPopup("I am a rectangle.").on('click', function(e) {
+				console.dir(e); // e is an event object (MouseEvent in this case)
+				console.dir(this);
+				console.dir(this.getBounds());
+				console.dir(this.toGeoJSON());
+				console.dir(mymap);
+			});
+
+			var popup = L.popup();
+
+			function onMapClick(e) {
+				popup
+					.setLatLng(e.latlng)
+					.setContent("You clicked the map at " + e.latlng.toString())
+					.openOn(mymap);
+			}
+
+			mymap.on('click', onMapClick);
+
+			// .toRad() fix
+			// from: http://stackoverflow.com/q/5260423/1418878
+			if (typeof(Number.prototype.toRad) === "undefined") {
+				Number.prototype.toRad = function() {
+					return this * Math.PI / 180;
+				}
+			}
+
+			function getTileURL(lat, lon, zoom) {
+				var xtile = parseInt(Math.floor((lon + 180) / 360 * (1 << zoom)));
+				var ytile = parseInt(Math.floor((1 - Math.log(Math.tan(lat.toRad()) + 1 / Math.cos(lat.toRad())) / Math.PI) / 2 * (1 << zoom)));
+				return "" + zoom + "/" + xtile + "/" + ytile + ".png";
+			}
+
+			// mymap.on('click', function(e) {
+			// 	console.dir(e);
+			// 	var tileUrl = getTileURL(e.latlng.lat, e.latlng.lng, mymap.getZoom());
+			// 	console.log(tileUrl);
+			// 	$('img.leaflet-tile[src$="' + tileUrl + '"]').css('border', '1px solid #ff0000')
+			// 	//$('img.leaflet-tile:regex(src, .*' + tileUrl + '.*)').css('border', '1px solid #ff0000')
+			// });
+		});
 	</script>
 </body>
+
 </html>
